@@ -1,0 +1,124 @@
+openapi: 3.1.0
+info:
+  title: FLOWLET
+  description: FLOWLET
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080/flowlet/v1/api'
+    description: local
+
+tags:
+  - カテゴリー
+
+paths:
+  /categories:
+    get:
+      summary: カテゴリ一覧取得
+      description: カテゴリ一覧を取得する
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categories'
+                examples:
+                  -
+                      incomeCategories:
+                        - categoryId: 10000
+                          categoryName: カテゴリー1
+                          iconKey: icon1
+                          sortOrder: 1
+                          children:
+                            - categoryId: 10001
+                              categoryName: 子カテゴリー1
+                              iconKey: icon2
+                              sortOrder: 1
+                      expenseCategories:
+                        - categoryId: 20000
+                          categoryName: カテゴリー2
+                          iconKey: icon3
+                          sortOrder: 2
+                          children:
+                            - categoryId: 20001
+                              categoryName: 子カテゴリー2
+                              iconKey: icon4
+                              sortOrder: 2
+        500:
+          $ref: '#/components/responses/500'
+
+
+      tags:
+        - カテゴリー
+
+components:
+  schemas:
+    Error:
+      type: object
+      description: エラーレスポンス
+      properties:
+        errorCode:
+          type: string
+          description: エラーコード
+        errorMessage:
+          type: string
+          description: エラーメッセージ
+        errorTime:
+          type: string
+          description: エラー発生時刻
+
+    Category:
+      type: object
+      description: カテゴリ情報
+      properties:
+        categoryId:
+          type: string
+          description: カテゴリーID
+        categoryName:
+          type: string
+          description: カテゴリー名
+        flowType:
+          type: string
+          description: 収支区分
+        iconKey:
+          type: string
+          description: カテゴリー用アイコン
+        sortOrder:
+          type: integer
+          description: ソート順
+        isActive:
+          type: boolean
+          description: 有効フラグ
+        children:
+          type: array
+          description: 子カテゴリーリスト
+          items:
+            $ref: '#/components/schemas/Category'
+
+    Categories:
+      type: object
+      description: カテゴリー一覧
+      properties:
+        incomeCategories:
+          type: array
+          description: 収入カテゴリーリスト
+          items:
+            $ref: '#/components/schemas/Category'
+        expenseCategories:
+          type: array
+          description: 支出カテゴリーリスト
+          items:
+            $ref: '#/components/schemas/Category'
+
+  responses:
+    500:
+      description: Internal Server Error
+      summary: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            example:
+              errorCode: INTERNAL_SERVER_ERROR
+              errorMessage: Internal Server Error
+              errorTime: 2023-08-01T12:34:56Z
