@@ -1,0 +1,68 @@
+graph TD
+    Start([アプリ起動]) --> CheckRecurring{繰り返し支出<br/>未入力あり?}
+    
+    CheckRecurring -->|はい| RecurringDialog[繰り返し支出<br/>一括登録ダイアログ]
+    CheckRecurring -->|いいえ| Dashboard
+    RecurringDialog -->|登録完了| Dashboard
+    
+    Dashboard[ダッシュボード<br/>ホーム画面] -->|取引入力| TransactionInput[取引入力画面]
+    Dashboard -->|取引履歴| TransactionList[取引履歴画面]
+    Dashboard -->|予算設定| Budget[予算設定画面]
+    Dashboard -->|貯金目標| Savings[貯金目標画面]
+    Dashboard -->|口座・カード| Account[口座・カード管理画面]
+    Dashboard -->|カテゴリ| Category[カテゴリ管理画面]
+    Dashboard -->|繰り返し支出| Recurring[繰り返し支出設定画面]
+    Dashboard -->|統計・レポート| Report[統計・レポート画面]
+    Dashboard -->|設定| Settings[アプリ設定画面]
+    
+    TransactionInput -->|登録完了| Dashboard
+    TransactionInput -->|キャンセル| Dashboard
+    
+    TransactionList -->|取引選択| TransactionDetail[取引詳細・編集]
+    TransactionDetail -->|更新| TransactionList
+    TransactionDetail -->|削除| TransactionList
+    TransactionDetail -->|戻る| TransactionList
+    TransactionList -->|戻る| Dashboard
+    
+    Budget -->|予算作成・編集| BudgetForm[予算入力フォーム]
+    BudgetForm -->|保存| Budget
+    BudgetForm -->|キャンセル| Budget
+    Budget -->|戻る| Dashboard
+    
+    Savings -->|目標作成・編集| SavingsForm[貯金目標入力フォーム]
+    SavingsForm -->|保存| Savings
+    SavingsForm -->|キャンセル| Savings
+    Savings -->|戻る| Dashboard
+    
+    Account -->|口座タブ| AccountTab[口座一覧]
+    Account -->|カードタブ| CardTab[カード一覧]
+    AccountTab -->|口座作成・編集| AccountForm[口座入力フォーム]
+    CardTab -->|カード作成・編集| CardForm[カード入力フォーム]
+    AccountForm -->|保存| Account
+    CardForm -->|保存| Account
+    Account -->|戻る| Dashboard
+    
+    Category -->|カテゴリ作成・編集| CategoryForm[カテゴリ入力フォーム]
+    CategoryForm -->|保存| Category
+    CategoryForm -->|キャンセル| Category
+    Category -->|戻る| Dashboard
+    
+    Recurring -->|支出作成・編集| RecurringForm[繰り返し支出入力フォーム]
+    RecurringForm -->|保存| Recurring
+    RecurringForm -->|キャンセル| Recurring
+    Recurring -->|戻る| Dashboard
+    
+    Report -->|前期間比較| ReportComparison[前期間比較表示]
+    Report -->|年間サマリー| ReportAnnual[年間サマリー表示]
+    Report -->|カテゴリ別推移| ReportTrend[カテゴリ別推移表示]
+    ReportComparison -->|戻る| Report
+    ReportAnnual -->|戻る| Report
+    ReportTrend -->|戻る| Report
+    Report -->|戻る| Dashboard
+    
+    Settings -->|保存| Dashboard
+    Settings -->|戻る| Dashboard
+    
+    style Dashboard fill:#4ECDC4,stroke:#333,stroke-width:3px
+    style Start fill:#95E1D3,stroke:#333,stroke-width:2px
+    style RecurringDialog fill:#FFE66D,stroke:#333,stroke-width:2px
