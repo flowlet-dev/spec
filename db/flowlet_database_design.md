@@ -69,9 +69,9 @@ CREATE TABLE flowlet.m_app_settings (
     app_settings_id VARCHAR(10) PRIMARY KEY DEFAULT ('SET' || LPAD(NEXTVAL('flowlet.seq_m_app_settings')::TEXT, 7, '0')),
     user_id VARCHAR(10),
     payday INTEGER NOT NULL CHECK (payday BETWEEN 1 AND 31),
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -93,9 +93,9 @@ CREATE TABLE flowlet.m_users (
     username VARCHAR(255) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -120,9 +120,9 @@ CREATE TABLE flowlet.m_accounts (
     initial_balance DECIMAL(15, 2) NOT NULL DEFAULT 0,
     current_balance DECIMAL(15, 2) NOT NULL DEFAULT 0,
     is_savings_account BOOLEAN NOT NULL DEFAULT FALSE,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -147,12 +147,12 @@ CREATE TABLE flowlet.m_credit_cards (
     user_id VARCHAR(10),
     card_name VARCHAR(100) NOT NULL,
     withdrawal_account_id VARCHAR(10) NOT NULL,
+    closing_day VARCHAR(20) NOT NULL,
     withdrawal_day INTEGER NOT NULL CHECK (withdrawal_day BETWEEN 1 AND 31),
-    weekend_handling VARCHAR(20) NOT NULL CHECK (weekend_handling IN ('NEXT_BUSINESS_DAY', 'PREVIOUS_BUSINESS_DAY')),
-    payment_cycle VARCHAR(20) NOT NULL CHECK (payment_cycle IN ('CURRENT_MONTH', 'NEXT_MONTH', 'TWO_MONTHS_LATER')),
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    weekend_handling VARCHAR(20) NOT NULL CHECK (weekend_handling IN ('NEXT_BUSINESS_DAY', 'PREVIOUS_BUSINESS_DAY', 'NO_CHANGE')),
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (withdrawal_account_id) REFERENCES flowlet.m_accounts(account_id)
 );
@@ -161,9 +161,9 @@ COMMENT ON TABLE flowlet.m_credit_cards IS 'クレジットカード';
 COMMENT ON COLUMN flowlet.m_credit_cards.credit_card_id IS 'クレジットカードID';
 COMMENT ON COLUMN flowlet.m_credit_cards.card_name IS 'カード名';
 COMMENT ON COLUMN flowlet.m_credit_cards.withdrawal_account_id IS '引き落とし口座ID';
+COMMENT ON COLUMN flowlet.m_credit_cards.closing_day IS '締め日(1-31 または END_OF_MONTH)';
 COMMENT ON COLUMN flowlet.m_credit_cards.withdrawal_day IS '引き落とし日(1-31)';
-COMMENT ON COLUMN flowlet.m_credit_cards.weekend_handling IS '土日祝の扱い';
-COMMENT ON COLUMN flowlet.m_credit_cards.payment_cycle IS '支払いサイクル';
+COMMENT ON COLUMN flowlet.m_credit_cards.weekend_handling IS '土日祝の扱い(NEXT_BUSINESS_DAY: 翌営業日, PREVIOUS_BUSINESS_DAY: 前営業日, NO_CHANGE: 変更なし)';
 ```
 
 ---
@@ -180,9 +180,9 @@ CREATE TABLE flowlet.m_categories (
     category_type VARCHAR(20) NOT NULL CHECK (category_type IN ('INCOME', 'EXPENSE')),
     parent_category_id VARCHAR(10),
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (parent_category_id) REFERENCES flowlet.m_categories(category_id)
 );
@@ -205,17 +205,20 @@ COMMENT ON COLUMN flowlet.m_categories.is_deleted IS '削除フラグ';
 CREATE TABLE flowlet.m_savings_goals (
     savings_goal_id VARCHAR(10) PRIMARY KEY DEFAULT ('SVG' || LPAD(NEXTVAL('flowlet.seq_m_savings_goals')::TEXT, 7, '0')),
     user_id VARCHAR(10),
+    account_id VARCHAR(10) NOT NULL,
     goal_name VARCHAR(100) NOT NULL,
     target_amount DECIMAL(15, 2),
     current_amount DECIMAL(15, 2) NOT NULL DEFAULT 0,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_by VARCHAR(10),
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES flowlet.m_accounts(account_id)
 );
 
 COMMENT ON TABLE flowlet.m_savings_goals IS '貯金目標';
 COMMENT ON COLUMN flowlet.m_savings_goals.savings_goal_id IS '貯金目標ID';
+COMMENT ON COLUMN flowlet.m_savings_goals.account_id IS '貯金用口座ID';
 COMMENT ON COLUMN flowlet.m_savings_goals.goal_name IS '目標名';
 COMMENT ON COLUMN flowlet.m_savings_goals.target_amount IS '目標金額(NULL可: 退避用など)';
 COMMENT ON COLUMN flowlet.m_savings_goals.current_amount IS '現在の積立額';
@@ -238,9 +241,9 @@ CREATE TABLE flowlet.m_recurring_expenses (
     credit_card_id VARCHAR(10),
     payment_day INTEGER NOT NULL CHECK (payment_day BETWEEN 1 AND 31),
     memo TEXT,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES flowlet.m_categories(category_id),
     FOREIGN KEY (account_id) REFERENCES flowlet.m_accounts(account_id),
@@ -274,9 +277,9 @@ CREATE TABLE flowlet.t_transactions (
     from_account_id VARCHAR(10),
     to_account_id VARCHAR(10),
     memo TEXT,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES flowlet.m_categories(category_id),
     FOREIGN KEY (account_id) REFERENCES flowlet.m_accounts(account_id),
@@ -306,9 +309,9 @@ CREATE TABLE flowlet.t_budgets (
     cycle_end_date DATE NOT NULL,
     category_id VARCHAR(10),
     budget_amount DECIMAL(15, 2) NOT NULL,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES flowlet.m_categories(category_id),
     UNIQUE (user_id, cycle_start_date, category_id)
@@ -334,9 +337,9 @@ CREATE TABLE flowlet.t_savings_allocations (
     transaction_id VARCHAR(10) NOT NULL,
     savings_goal_id VARCHAR(10) NOT NULL,
     allocation_amount DECIMAL(15, 2) NOT NULL,
-    created_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    created_by VARCHAR(10),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
+    updated_by VARCHAR(10),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (transaction_id) REFERENCES flowlet.t_transactions(transaction_id) ON DELETE CASCADE,
     FOREIGN KEY (savings_goal_id) REFERENCES flowlet.m_savings_goals(savings_goal_id)
@@ -512,6 +515,13 @@ erDiagram
 ---
 
 ## 7. 補足事項
+
+### 7.1 API設計との対応
+本データベース設計は、FLOWLET API設計書に基づいて作成されています。
+
+**主な変更履歴:**
+- `m_credit_cards`: `payment_cycle`削除、`closing_day`追加、`weekend_handling`に`NO_CHANGE`追加
+- `m_savings_goals`: `account_id`追加(貯金目標を特定の貯金用口座に紐付け)
 
 ### 7.1 ID生成方法
 各テーブルのPKは、DEFAULTでプレフィックス + sequenceによる7桁数字を自動生成します。

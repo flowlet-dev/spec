@@ -56,9 +56,9 @@ CREATE TABLE flowlet.m_credit_cards (
                                         user_id VARCHAR(10),
                                         card_name VARCHAR(100) NOT NULL,
                                         withdrawal_account_id VARCHAR(10) NOT NULL,
+                                        closing_day VARCHAR(20) NOT NULL,
                                         withdrawal_day INTEGER NOT NULL CHECK (withdrawal_day BETWEEN 1 AND 31),
-                                        weekend_handling VARCHAR(20) NOT NULL CHECK (weekend_handling IN ('NEXT_BUSINESS_DAY', 'PREVIOUS_BUSINESS_DAY')),
-                                        payment_cycle VARCHAR(20) NOT NULL CHECK (payment_cycle IN ('CURRENT_MONTH', 'NEXT_MONTH', 'TWO_MONTHS_LATER')),
+                                        weekend_handling VARCHAR(20) NOT NULL CHECK (weekend_handling IN ('NEXT_BUSINESS_DAY', 'PREVIOUS_BUSINESS_DAY', 'NO_CHANGE')),
                                         created_by VARCHAR(10) NOT NULL DEFAULT 'system',
                                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                         updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
@@ -70,9 +70,9 @@ COMMENT ON TABLE flowlet.m_credit_cards IS 'クレジットカード';
 COMMENT ON COLUMN flowlet.m_credit_cards.credit_card_id IS 'クレジットカードID';
 COMMENT ON COLUMN flowlet.m_credit_cards.card_name IS 'カード名';
 COMMENT ON COLUMN flowlet.m_credit_cards.withdrawal_account_id IS '引き落とし口座ID';
+COMMENT ON COLUMN flowlet.m_credit_cards.closing_day IS '締め日(1-31 または END_OF_MONTH)';
 COMMENT ON COLUMN flowlet.m_credit_cards.withdrawal_day IS '引き落とし日(1-31)';
-COMMENT ON COLUMN flowlet.m_credit_cards.weekend_handling IS '土日祝の扱い';
-COMMENT ON COLUMN flowlet.m_credit_cards.payment_cycle IS '支払いサイクル';
+COMMENT ON COLUMN flowlet.m_credit_cards.weekend_handling IS '土日祝の扱い(NEXT_BUSINESS_DAY: 翌営業日, PREVIOUS_BUSINESS_DAY: 前営業日, NO_CHANGE: 変更なし)';
 
 CREATE TABLE flowlet.m_categories (
                                       category_id VARCHAR(10) PRIMARY KEY DEFAULT ('CAT' || LPAD(NEXTVAL('flowlet.seq_m_categories')::TEXT, 7, '0')),
@@ -98,17 +98,20 @@ COMMENT ON COLUMN flowlet.m_categories.is_deleted IS '削除フラグ';
 CREATE TABLE flowlet.m_savings_goals (
                                          savings_goal_id VARCHAR(10) PRIMARY KEY DEFAULT ('SVG' || LPAD(NEXTVAL('flowlet.seq_m_savings_goals')::TEXT, 7, '0')),
                                          user_id VARCHAR(10),
+                                         account_id VARCHAR(10) NOT NULL,
                                          goal_name VARCHAR(100) NOT NULL,
                                          target_amount DECIMAL(15, 2),
                                          current_amount DECIMAL(15, 2) NOT NULL DEFAULT 0,
                                          created_by VARCHAR(10) NOT NULL DEFAULT 'system',
                                          created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                          updated_by VARCHAR(10) NOT NULL DEFAULT 'system',
-                                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         FOREIGN KEY (account_id) REFERENCES flowlet.m_accounts(account_id)
 );
 
 COMMENT ON TABLE flowlet.m_savings_goals IS '貯金目標';
 COMMENT ON COLUMN flowlet.m_savings_goals.savings_goal_id IS '貯金目標ID';
+COMMENT ON COLUMN flowlet.m_savings_goals.account_id IS '貯金用口座ID';
 COMMENT ON COLUMN flowlet.m_savings_goals.goal_name IS '目標名';
 COMMENT ON COLUMN flowlet.m_savings_goals.target_amount IS '目標金額(NULL可: 退避用など)';
 COMMENT ON COLUMN flowlet.m_savings_goals.current_amount IS '現在の積立額';
