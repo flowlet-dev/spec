@@ -74,6 +74,7 @@
 | fromPurposeId | UUID? | 振替元目的ID（任意） |
 | toAccountId | UUID | 振替先口座ID |
 | toPurposeId | UUID? | 振替先目的ID（任意） |
+| memo | String | メモ　|
 | isIncomeExpenseTarget | Boolean | 収支計算対象フラグ |
 | occurredAt | LocalDateTime | 発生日 |
 
