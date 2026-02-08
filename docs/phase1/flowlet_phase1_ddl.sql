@@ -69,6 +69,8 @@ CREATE TABLE flowlet.t_transaction (
     to_account_id UUID,
     to_purpose_id UUID,
 
+    memo VARCHAR(300),
+
     is_income_expense_target BOOLEAN NOT NULL,
     occurred_at TIMESTAMPTZ NOT NULL,
 
@@ -129,6 +131,8 @@ COMMENT ON COLUMN flowlet.t_transaction.from_account_id IS '出金元口座ID';
 COMMENT ON COLUMN flowlet.t_transaction.from_purpose_id IS '出金元目的ID';
 COMMENT ON COLUMN flowlet.t_transaction.to_account_id IS '入金先口座ID';
 COMMENT ON COLUMN flowlet.t_transaction.to_purpose_id IS '入金先目的ID';
+
+COMMENT ON COLUMN flowlet.t_transaction.memo IS 'メモ';
 
 COMMENT ON COLUMN flowlet.t_transaction.is_income_expense_target IS '収支計算対象フラグ';
 COMMENT ON COLUMN flowlet.t_transaction.occurred_at IS '取引発生日';
