@@ -1,4 +1,4 @@
-# Phase1：MVP定義（更新版）
+# Phase1：MVP定義
 
 ## 前提
 
@@ -100,6 +100,124 @@
 6. ダークモード
 
 **根拠**：利便性向上機能であり、収支把握という目的の本質ではない。
+
+---
+
+---
+
+# 給料日基準ロジック詳細仕様
+
+## 1. 前提
+
+* 給料日は毎月固定日（例：25日）
+* タイムゾーンはJST固定
+* 日付単位で管理（時刻は集計に影響させない）
+* 給料日が土日祝の場合は「直前の平日」に繰り上げる
+
+※祝日は日本の祝日カレンダーを基準とする（将来的には祝日マスタを保持）
+
+---
+
+## 2. 給料日補正ロジック
+
+### ■ 補正アルゴリズム
+
+基準給料日：`base_payday`（例：毎月25日）
+
+1. 当月の base_payday を生成
+2. その日が
+
+   * 土曜 → 前日へ
+   * 日曜 → 前々日へ
+   * 祝日 → 1日前へ（平日になるまで繰り返す）
+3. 平日になるまで前日に繰り下げる
+
+擬似コード：
+
+```
+actual_payday = LocalDate(year, month, base_payday)
+
+while isWeekend(actual_payday) || isHoliday(actual_payday):
+    actual_payday = actual_payday.minusDays(1)
+```
+
+※ isHoliday() は祝日マスタで判定
+
+---
+
+## 3. 期の定義
+
+### ■ 今期判定ロジック
+
+基準日：`today`
+給料日：`payday`
+
+```
+if today.day >= payday:
+    current_period_start = 当月payday
+else:
+    current_period_start = 前月payday
+
+current_period_end = current_period_startの翌月paydayの前日
+```
+
+### ■ 前期
+
+```
+previous_period_start = current_period_startの1か月前
+previous_period_end   = current_period_startの前日
+```
+
+---
+
+## 4. 境界日の扱い
+
+* 給料日当日は「新しい期」に含める
+* 例：給料日25日の場合
+
+  * 1/25 00:00 〜 次回2/24 23:59 を同一期
+
+---
+
+## 5. 月末不整合対策
+
+例：給料日31日、2月は存在しない
+
+仕様：
+
+* その月の最終日を給料日とみなす
+
+例：
+
+* 給料日31日設定
+* 2月は2/28（閏年は2/29）を給料日扱い
+
+---
+
+## 6. SQL集計イメージ
+
+```
+SELECT SUM(amount)
+FROM transactions
+WHERE transaction_date >= :period_start
+  AND transaction_date <= :period_end;
+```
+
+インデックス：
+
+* transaction_date にINDEX必須
+
+---
+
+## 7. 設計根拠
+
+* 給料日補正を先に確定させることで期計算の一貫性を担保
+* 「直前営業日」ルールは一般企業の給与支給慣行に一致
+* 祝日考慮を明文化しないと将来的に境界バグを生むため
+* 日付ベース集計に限定し、時刻依存バグを排除
+* 給料日当日を開始日に含めることで二重計上を防ぐ
+* 月末補正ルールを明確化し、将来のバグを回避
+* 日付ベース集計に限定し、時刻依存バグを排除
 
 ---
 
